@@ -1,0 +1,250 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Cấu hình
+local Settings = {
+    SilentAim = false,
+    ShowFOV = false,
+    FOVSize = 130,
+    InfStamina = false,
+    OriginalStamina = 100
+}
+
+-- FOV Circle
+local FOVCircle = nil
+pcall(function()
+    FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 1.5
+    FOVCircle.NumSides = 100
+    FOVCircle.Radius = Settings.FOVSize
+    FOVCircle.Filled = false
+    FOVCircle.Visible = false
+    FOVCircle.Color = Color3.fromRGB(120, 40, 180)
+end)
+
+-- Logic Stamina & FOV
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
+        if stamina then
+            if Settings.InfStamina then
+                stamina.Value = 9999
+            end
+        end
+    end)
+    if FOVCircle then
+        FOVCircle.Visible = Settings.ShowFOV
+        FOVCircle.Radius = Settings.FOVSize
+        FOVCircle.Position = UserInputService:GetMouseLocation()
+    end
+end)
+
+local Theme = {
+    Main = Color3.fromRGB(10, 10, 10),
+    Sidebar = Color3.fromRGB(15, 15, 15),
+    Accent = Color3.fromRGB(140, 60, 255),
+    Element = Color3.fromRGB(25, 25, 25),
+    Text = Color3.fromRGB(255, 255, 255),
+    TextDark = Color3.fromRGB(160, 160, 160)
+}
+
+-- Khởi tạo GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "Yuki_Elite_Pro_Final"
+ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 580, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -290, 0.5, -200)
+MainFrame.BackgroundColor3 = Theme.Main
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame)
+Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(40, 40, 40)
+
+-- [CỤM NÚT ĐIỀU KHIỂN NẰM NGOÀI GUI - LÊN CAO]
+local Controls = Instance.new("Frame")
+Controls.Size = UDim2.new(0, 70, 0, 30)
+-- Đặt vị trí Y là -35 để nó nhảy lên trên nóc của MainFrame
+Controls.Position = UDim2.new(1, -75, 0, -35) 
+Controls.BackgroundTransparency = 1
+Controls.Parent = MainFrame
+
+local function CreateTopBtn(txt, color, pos, func)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(0, 28, 0, 28)
+    b.Position = pos
+    b.BackgroundColor3 = Theme.Element
+    b.Text = txt
+    b.Font = Enum.Font.GothamBold
+    b.TextColor3 = color
+    b.TextSize = 16
+    b.Parent = Controls
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+    Instance.new("UIStroke", b).Color = Color3.fromRGB(50, 50, 50)
+    b.MouseButton1Click:Connect(func)
+end
+
+-- Icon tròn thu nhỏ
+local MinIcon = Instance.new("TextButton")
+MinIcon.Size = UDim2.new(0, 50, 0, 50)
+MinIcon.Position = UDim2.new(0.05, 0, 0.2, 0)
+MinIcon.BackgroundColor3 = Theme.Accent
+MinIcon.Text = "Y"
+MinIcon.Font = Enum.Font.GothamBold
+MinIcon.TextColor3 = Theme.Text
+MinIcon.TextSize = 25
+MinIcon.Visible = false
+MinIcon.Parent = ScreenGui
+Instance.new("UICorner", MinIcon).CornerRadius = UDim.new(1, 0)
+
+CreateTopBtn("×", Color3.fromRGB(255, 80, 80), UDim2.new(0, 40, 0, 0), function() ScreenGui:Destroy() end)
+CreateTopBtn("-", Theme.Text, UDim2.new(0, 5, 0, 0), function() MainFrame.Visible = false; MinIcon.Visible = true end)
+
+MinIcon.MouseButton1Click:Connect(function() MainFrame.Visible = true; MinIcon.Visible = false end)
+
+-- [SIDEBAR]
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 150, 1, 0)
+Sidebar.BackgroundColor3 = Theme.Sidebar
+Sidebar.Parent = MainFrame
+Instance.new("UICorner", Sidebar)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 60)
+Title.Text = "YUKI ELITE"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextColor3 = Theme.Accent
+Title.BackgroundTransparency = 1
+Title.Parent = Sidebar
+
+local TabButtonHolder = Instance.new("Frame")
+TabButtonHolder.Size = UDim2.new(1, 0, 1, -120)
+TabButtonHolder.Position = UDim2.new(0, 0, 0, 70)
+TabButtonHolder.BackgroundTransparency = 1
+TabButtonHolder.Parent = Sidebar
+Instance.new("UIListLayout", TabButtonHolder).Padding = UDim.new(0, 10)
+
+-- Avatar góc dưới
+local UserInfo = Instance.new("Frame")
+UserInfo.Size = UDim2.new(1, -20, 0, 45)
+UserInfo.Position = UDim2.new(0, 10, 1, -55)
+UserInfo.BackgroundColor3 = Theme.Element
+UserInfo.Parent = Sidebar
+Instance.new("UICorner", UserInfo)
+
+local Avatar = Instance.new("ImageLabel")
+Avatar.Size = UDim2.new(0, 35, 0, 35)
+Avatar.Position = UDim2.new(0, 5, 0.5, -17)
+Avatar.Image = "rbxthumb://type=AvatarHeadShot&id="..LocalPlayer.UserId.."&w=150&h=150"
+Avatar.BackgroundTransparency = 1
+Avatar.Parent = UserInfo
+Instance.new("UICorner", Avatar).CornerRadius = UDim.new(1, 0)
+
+local NameLabel = Instance.new("TextLabel")
+NameLabel.Size = UDim2.new(1, -50, 1, 0)
+NameLabel.Position = UDim2.new(0, 45, 0, 0)
+NameLabel.Text = LocalPlayer.DisplayName
+NameLabel.TextColor3 = Theme.Text
+NameLabel.Font = Enum.Font.GothamMedium
+NameLabel.TextSize = 12
+NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+NameLabel.BackgroundTransparency = 1
+NameLabel.Parent = UserInfo
+
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -170, 1, -20)
+Container.Position = UDim2.new(0, 160, 0, 10)
+Container.BackgroundTransparency = 1
+Container.Parent = MainFrame
+
+local Pages = {}
+local function CreateTab(name, isDefault)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -20, 0, 35)
+    btn.BackgroundColor3 = isDefault and Theme.Element or Color3.fromRGB(20, 20, 20)
+    btn.Text = name
+    btn.TextColor3 = isDefault and Theme.Text or Theme.TextDark
+    btn.Font = Enum.Font.GothamMedium
+    btn.Parent = TabButtonHolder
+    Instance.new("UICorner", btn)
+
+    local page = Instance.new("ScrollingFrame")
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = isDefault or false
+    page.ScrollBarThickness = 0
+    page.Parent = Container
+    Instance.new("UIListLayout", page).Padding = UDim.new(0, 8)
+
+    btn.MouseButton1Click:Connect(function()
+        for _, p in pairs(Pages) do p.Visible = false end
+        page.Visible = true
+        for _, b in pairs(TabButtonHolder:GetChildren()) do
+            if b:IsA("TextButton") then b.BackgroundColor3 = Color3.fromRGB(20, 20, 20) b.TextColor3 = Theme.TextDark end
+        end
+        btn.BackgroundColor3 = Theme.Element btn.TextColor3 = Theme.Text
+    end)
+    table.insert(Pages, page)
+
+    local Funcs = {}
+    function Funcs:AddLabel(text)
+        local l = Instance.new("TextLabel")
+        l.Size = UDim2.new(1, 0, 0, 30); l.Text = text:upper(); l.Font = Enum.Font.GothamBold; l.TextSize = 13; l.TextColor3 = Theme.Accent; l.BackgroundTransparency = 1; l.TextXAlignment = Enum.TextXAlignment.Left; l.Parent = page
+    end
+
+    function Funcs:AddToggle(text, callback)
+        local tBtn = Instance.new("TextButton")
+        tBtn.Size = UDim2.new(1, -5, 0, 40); tBtn.BackgroundColor3 = Theme.Element; tBtn.Text = ""; tBtn.Parent = page; Instance.new("UICorner", tBtn)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -50, 1, 0); label.Position = UDim2.new(0, 12, 0, 0); label.Text = text; label.TextColor3 = Theme.TextDark; label.Font = Enum.Font.GothamMedium; label.TextSize = 14; label.TextXAlignment = Enum.TextXAlignment.Left; label.BackgroundTransparency = 1; label.Parent = tBtn
+        local switch = Instance.new("Frame")
+        switch.Size = UDim2.new(0, 34, 0, 18); switch.Position = UDim2.new(1, -44, 0.5, -9); switch.BackgroundColor3 = Color3.fromRGB(45, 45, 45); switch.Parent = tBtn; Instance.new("UICorner", switch).CornerRadius = UDim.new(1, 0)
+        local dot = Instance.new("Frame")
+        dot.Size = UDim2.new(0, 14, 0, 14); dot.Position = UDim2.new(0, 2, 0.5, -7); dot.BackgroundColor3 = Color3.fromRGB(200, 200, 200); dot.Parent = switch; Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+        local active = false
+        tBtn.MouseButton1Click:Connect(function()
+            active = not active
+            TweenService:Create(dot, TweenInfo.new(0.2), {Position = active and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)}):Play()
+            TweenService:Create(switch, TweenInfo.new(0.2), {BackgroundColor3 = active and Theme.Accent or Color3.fromRGB(45, 45, 45)}):Play()
+            callback(active)
+        end)
+    end
+    return Funcs
+end
+
+-- [NỘI DUNG]
+local MainTab = CreateTab("Main", true)
+MainTab:AddLabel("Player Settings")
+MainTab:AddToggle("Infinity Stamina", function(v)
+    local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
+    if v then
+        if stamina then Settings.OriginalStamina = stamina.Value end
+        Settings.InfStamina = true
+    else
+        Settings.InfStamina = false
+        task.wait(0.1)
+        if stamina then stamina.Value = Settings.OriginalStamina end
+    end
+end)
+
+local CombatTab = CreateTab("Combat", false)
+CombatTab:AddLabel("Silent Aim System")
+CombatTab:AddToggle("Enable Silent Aim", function(v) Settings.SilentAim = v end)
+CombatTab:AddToggle("Show FOV Circle", function(v) Settings.ShowFOV = v end)
+
+-- Kéo thả
+local function MakeDraggable(obj)
+    local drag, start, pos
+    obj.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true; start = i.Position; pos = obj.Position end end)
+    obj.InputChanged:Connect(function(i) if drag and i.UserInputType == Enum.UserInputType.MouseMovement then local d = i.Position - start; obj.Position = UDim2.new(pos.X.Scale, pos.X.Offset + d.X, pos.Y.Scale, pos.Y.Offset + d.Y) end end)
+    obj.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end end)
+end
+
+MakeDraggable(MainFrame)
+MakeDraggable(MinIcon)
