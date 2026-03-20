@@ -219,8 +219,11 @@ local function CreateTab(name, isDefault)
 end
 
 -- [NỘI DUNG]
+-- [PHẦN NỘI DUNG CẬP NHẬT]
 local MainTab = CreateTab("Main", true)
 MainTab:AddLabel("Player Settings")
+
+-- Toggle Infinity Stamina
 MainTab:AddToggle("Infinity Stamina", function(v)
     local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
     if v then
@@ -230,6 +233,73 @@ MainTab:AddToggle("Infinity Stamina", function(v)
         Settings.InfStamina = false
         task.wait(0.1)
         if stamina then stamina.Value = Settings.OriginalStamina end
+    end
+end)
+
+-- Toggle Sprint (Nhấn 1 lần để chạy/đi bộ)
+local sprinting = false
+local sprintConnection = nil
+
+-- Thêm biến quản lý trong Settings (ở đầu script)
+Settings.InstantInteract = false
+
+-- [PHẦN NỘI DUNG TRONG MAINTAB]
+local MainTab = CreateTab("Main", true)
+MainTab:AddLabel("Player Settings")
+
+-- 1. Infinity Stamina (Giữ nguyên của bạn)
+MainTab:AddToggle("Infinity Stamina", function(v)
+    local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
+    if v then
+        if stamina then Settings.OriginalStamina = stamina.Value end
+        Settings.InfStamina = true
+    else
+        Settings.InfStamina = false
+        task.wait(0.1)
+        if stamina then stamina.Value = Settings.OriginalStamina end
+    end
+end)
+
+-- 2. Instant Interact (Phần bạn mới yêu cầu)
+MainTab:AddToggle("Instant Interact", function(v)
+    Settings.InstantInteract = v
+    
+    -- Hàm xử lý thay đổi ProximityPrompt
+    local function FastPrompt(obj)
+        if obj:IsA("ProximityPrompt") then
+            -- Nếu bật thì chỉnh về 0, nếu tắt thì trả về mặc định (thường là 1 hoặc tùy game)
+            obj.HoldDuration = v and 0 or obj.HoldDuration
+        end
+    end
+
+    -- Quét toàn bộ map để tìm các object tên "Interact"
+    if v then
+        for _, descendant in pairs(workspace:GetDescendants()) do
+            -- Kiểm tra nếu tên là Interact hoặc có chứa Prompt bên trong
+            if descendant.Name == "Interact" or descendant:IsA("ProximityPrompt") then
+                if descendant:IsA("ProximityPrompt") then
+                    FastPrompt(descendant)
+                else
+                    local prompt = descendant:FindFirstChildOfClass("ProximityPrompt")
+                    if prompt then FastPrompt(prompt) end
+                end
+            end
+        end
+    end
+end)
+
+-- Logic tự động áp dụng cho các Object mới xuất hiện (Ví dụ khi bạn sang khu vực mới)
+workspace.DescendantAdded:Connect(function(descendant)
+    if Settings.InstantInteract then
+        task.wait(0.1) -- Đợi object load xong
+        if descendant.Name == "Interact" or descendant:IsA("ProximityPrompt") then
+            if descendant:IsA("ProximityPrompt") then
+                descendant.HoldDuration = 0
+            else
+                local prompt = descendant:FindFirstChildOfClass("ProximityPrompt")
+                if prompt then prompt.HoldDuration = 0 end
+            end
+        end
     end
 end)
 
