@@ -5,6 +5,26 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+local Settings = {
+    SilentAim = false,
+    ShowFOV = false,
+    FOVSize = 130,
+    InfStamina = false,
+    OriginalStamina = 100
+}
+
+local FOVCircle = nil
+pcall(function()
+    FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 1.5
+    FOVCircle.NumSides = 100
+    FOVCircle.Radius = Settings.FOVSize
+    FOVCircle.Filled = false
+    FOVCircle.Visible = false
+    FOVCircle.Color = Color3.fromRGB(120, 40, 180)
+end)
+
+-- Logic Stamina & FOV
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
