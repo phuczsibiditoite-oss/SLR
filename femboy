@@ -5,6 +5,26 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+local Settings = {
+    SilentAim = false,
+    ShowFOV = false,
+    FOVSize = 130,
+    InfStamina = false,
+    OriginalStamina = 100
+}
+
+local FOVCircle = nil
+pcall(function()
+    FOVCircle = Drawing.new("Circle")
+    FOVCircle.Thickness = 1.5
+    FOVCircle.NumSides = 100
+    FOVCircle.Radius = Settings.FOVSize
+    FOVCircle.Filled = false
+    FOVCircle.Visible = false
+    FOVCircle.Color = Color3.fromRGB(120, 40, 180)
+end)
+
+-- Logic Stamina & FOV
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
@@ -30,6 +50,7 @@ local Theme = {
     TextDark = Color3.fromRGB(160, 160, 160)
 }
 
+-- Khởi tạo GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Yuki_Elite_Pro_Final"
 ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
@@ -45,7 +66,6 @@ Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(40, 40, 40)
 
 local Controls = Instance.new("Frame")
 Controls.Size = UDim2.new(0, 70, 0, 30)
--- Đặt vị trí Y là -35 để nó nhảy lên trên nóc của MainFrame
 Controls.Position = UDim2.new(1, -75, 0, -35) 
 Controls.BackgroundTransparency = 1
 Controls.Parent = MainFrame
@@ -69,7 +89,7 @@ local MinIcon = Instance.new("TextButton")
 MinIcon.Size = UDim2.new(0, 50, 0, 50)
 MinIcon.Position = UDim2.new(0.05, 0, 0.2, 0)
 MinIcon.BackgroundColor3 = Theme.Accent
-MinIcon.Text = "Y"
+MinIcon.Text = "Yuki"
 MinIcon.Font = Enum.Font.GothamBold
 MinIcon.TextColor3 = Theme.Text
 MinIcon.TextSize = 25
@@ -191,24 +211,6 @@ local function CreateTab(name, isDefault)
     return Funcs
 end
 
-local MainTab = CreateTab("Main", true)
-MainTab:AddLabel("Player Settings")
-
-MainTab:AddToggle("Infinity Stamina", function(v)
-    local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
-    if v then
-        if stamina then Settings.OriginalStamina = stamina.Value end
-        Settings.InfStamina = true
-    else
-        Settings.InfStamina = false
-        task.wait(0.1)
-        if stamina then stamina.Value = Settings.OriginalStamina end
-    end
-end)
-
-local sprinting = false
-local sprintConnection = nil
-
 Settings.InstantInteract = false
 
 local MainTab = CreateTab("Main", true)
@@ -228,17 +230,15 @@ end)
 
 MainTab:AddToggle("Instant Interact", function(v)
     Settings.InstantInteract = v
-    
+
     local function FastPrompt(obj)
         if obj:IsA("ProximityPrompt") then
-            -- Nếu bật thì chỉnh về 0, nếu tắt thì trả về mặc định (thường là 1 hoặc tùy game)
             obj.HoldDuration = v and 0 or obj.HoldDuration
         end
     end
 
     if v then
         for _, descendant in pairs(workspace:GetDescendants()) do
-            -- Kiểm tra nếu tên là Interact hoặc có chứa Prompt bên trong
             if descendant.Name == "Interact" or descendant:IsA("ProximityPrompt") then
                 if descendant:IsA("ProximityPrompt") then
                     FastPrompt(descendant)
@@ -264,11 +264,6 @@ workspace.DescendantAdded:Connect(function(descendant)
         end
     end
 end)
-
-local CombatTab = CreateTab("Combat", false)
-CombatTab:AddLabel("Silent Aim System")
-CombatTab:AddToggle("Enable Silent Aim", function(v) Settings.SilentAim = v end)
-CombatTab:AddToggle("Show FOV Circle", function(v) Settings.ShowFOV = v end)
 
 local function MakeDraggable(obj)
     local drag, start, pos
