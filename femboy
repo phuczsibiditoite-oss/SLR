@@ -5,28 +5,6 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- Cấu hình
-local Settings = {
-    SilentAim = false,
-    ShowFOV = false,
-    FOVSize = 130,
-    InfStamina = false,
-    OriginalStamina = 100
-}
-
--- FOV Circle
-local FOVCircle = nil
-pcall(function()
-    FOVCircle = Drawing.new("Circle")
-    FOVCircle.Thickness = 1.5
-    FOVCircle.NumSides = 100
-    FOVCircle.Radius = Settings.FOVSize
-    FOVCircle.Filled = false
-    FOVCircle.Visible = false
-    FOVCircle.Color = Color3.fromRGB(120, 40, 180)
-end)
-
--- Logic Stamina & FOV
 RunService.Heartbeat:Connect(function()
     pcall(function()
         local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
@@ -52,7 +30,6 @@ local Theme = {
     TextDark = Color3.fromRGB(160, 160, 160)
 }
 
--- Khởi tạo GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "Yuki_Elite_Pro_Final"
 ScreenGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
@@ -66,7 +43,6 @@ MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame)
 Instance.new("UIStroke", MainFrame).Color = Color3.fromRGB(40, 40, 40)
 
--- [CỤM NÚT ĐIỀU KHIỂN NẰM NGOÀI GUI - LÊN CAO]
 local Controls = Instance.new("Frame")
 Controls.Size = UDim2.new(0, 70, 0, 30)
 -- Đặt vị trí Y là -35 để nó nhảy lên trên nóc của MainFrame
@@ -89,7 +65,6 @@ local function CreateTopBtn(txt, color, pos, func)
     b.MouseButton1Click:Connect(func)
 end
 
--- Icon tròn thu nhỏ
 local MinIcon = Instance.new("TextButton")
 MinIcon.Size = UDim2.new(0, 50, 0, 50)
 MinIcon.Position = UDim2.new(0.05, 0, 0.2, 0)
@@ -107,7 +82,6 @@ CreateTopBtn("-", Theme.Text, UDim2.new(0, 5, 0, 0), function() MainFrame.Visibl
 
 MinIcon.MouseButton1Click:Connect(function() MainFrame.Visible = true; MinIcon.Visible = false end)
 
--- [SIDEBAR]
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 150, 1, 0)
 Sidebar.BackgroundColor3 = Theme.Sidebar
@@ -130,7 +104,6 @@ TabButtonHolder.BackgroundTransparency = 1
 TabButtonHolder.Parent = Sidebar
 Instance.new("UIListLayout", TabButtonHolder).Padding = UDim.new(0, 10)
 
--- Avatar góc dưới
 local UserInfo = Instance.new("Frame")
 UserInfo.Size = UDim2.new(1, -20, 0, 45)
 UserInfo.Position = UDim2.new(0, 10, 1, -55)
@@ -218,12 +191,9 @@ local function CreateTab(name, isDefault)
     return Funcs
 end
 
--- [NỘI DUNG]
--- [PHẦN NỘI DUNG CẬP NHẬT]
 local MainTab = CreateTab("Main", true)
 MainTab:AddLabel("Player Settings")
 
--- Toggle Infinity Stamina
 MainTab:AddToggle("Infinity Stamina", function(v)
     local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
     if v then
@@ -236,18 +206,14 @@ MainTab:AddToggle("Infinity Stamina", function(v)
     end
 end)
 
--- Toggle Sprint (Nhấn 1 lần để chạy/đi bộ)
 local sprinting = false
 local sprintConnection = nil
 
--- Thêm biến quản lý trong Settings (ở đầu script)
 Settings.InstantInteract = false
 
--- [PHẦN NỘI DUNG TRONG MAINTAB]
 local MainTab = CreateTab("Main", true)
 MainTab:AddLabel("Player Settings")
 
--- 1. Infinity Stamina (Giữ nguyên của bạn)
 MainTab:AddToggle("Infinity Stamina", function(v)
     local stamina = LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Stamina")
     if v then
@@ -260,11 +226,9 @@ MainTab:AddToggle("Infinity Stamina", function(v)
     end
 end)
 
--- 2. Instant Interact (Phần bạn mới yêu cầu)
 MainTab:AddToggle("Instant Interact", function(v)
     Settings.InstantInteract = v
     
-    -- Hàm xử lý thay đổi ProximityPrompt
     local function FastPrompt(obj)
         if obj:IsA("ProximityPrompt") then
             -- Nếu bật thì chỉnh về 0, nếu tắt thì trả về mặc định (thường là 1 hoặc tùy game)
@@ -272,7 +236,6 @@ MainTab:AddToggle("Instant Interact", function(v)
         end
     end
 
-    -- Quét toàn bộ map để tìm các object tên "Interact"
     if v then
         for _, descendant in pairs(workspace:GetDescendants()) do
             -- Kiểm tra nếu tên là Interact hoặc có chứa Prompt bên trong
@@ -288,7 +251,6 @@ MainTab:AddToggle("Instant Interact", function(v)
     end
 end)
 
--- Logic tự động áp dụng cho các Object mới xuất hiện (Ví dụ khi bạn sang khu vực mới)
 workspace.DescendantAdded:Connect(function(descendant)
     if Settings.InstantInteract then
         task.wait(0.1) -- Đợi object load xong
@@ -308,7 +270,6 @@ CombatTab:AddLabel("Silent Aim System")
 CombatTab:AddToggle("Enable Silent Aim", function(v) Settings.SilentAim = v end)
 CombatTab:AddToggle("Show FOV Circle", function(v) Settings.ShowFOV = v end)
 
--- Kéo thả
 local function MakeDraggable(obj)
     local drag, start, pos
     obj.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true; start = i.Position; pos = obj.Position end end)
